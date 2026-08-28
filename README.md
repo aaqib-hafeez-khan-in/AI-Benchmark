@@ -1,65 +1,103 @@
-# Model Benchmark
+# AI Benchmark
 
-## Overview
+AI Benchmark is a Next.js application for comparing LLM responses side by side. It supports mock simulations for offline experimentation and real model calls through supported providers, with streamed responses and manual scoring.
 
-Model Benchmark is a Next.js 14 application that compares LLM response styles side by side. It supports both mock simulation for offline testing and real API integration with free-tier LLM providers.
+## What you can do
 
-## Getting Started
+- Compare two models against the same prompt in real time.
+- Load runnable benchmark prompts for coding, reasoning, summarization, instruction following and factual QA.
+- View the latest LiveBench leaderboard directly from its public release data.
+- Use mock models without API keys.
+- Use supported real-model providers when you supply your own token.
+- Score responses manually and inspect the winner for the current comparison.
+
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Then open [http://localhost:3000](http://localhost:3000) in your browser.
+Open `http://localhost:3000` in your browser.
 
-## How It Works
+For a production check:
 
-The application supports three modes of operation:
+```bash
+npm run build
+npx serve out
+```
 
-### Mock Mode (No API Keys)
-Select models marked "(Mock)" to use the local simulation engine. This generates realistic responses using templates without any network calls. Ideal for offline testing and UI demonstrations.
+## Benchmarks
 
-### Hugging Face Mode (Free API)
-Select "hf-" prefixed models to use real open-source models via Hugging Face Inference API:
-- Free tier: 2,000 requests/day per user
-- Supports: Mistral, Llama, Gemma, Zephyr, DeepSeek
-- Get token at: https://huggingface.co/settings/tokens
+The application separates runnable prompts from benchmark metadata. Runnable prompts are designed for repeatable side-by-side comparisons. The benchmark catalog currently tracks the latest public releases used as reference points:
 
-### GitHub Models Mode (Free API)
-Select "gh-" prefixed models to use models via GitHub's Azure-hosted inference:
-- Free tier available for GitHub users
-- Supports: GPT-4o, GPT-4o Mini, Phi-3, Mistral Large, Llama 3.3 70B, AI21 Jamba
-- Get token at: https://github.com/settings/tokens
+- LiveBench 2026-06-25: 23 objective tasks across Reasoning, Coding, Agentic Coding, Mathematics, Data Analysis, Language and Instruction Following.
+- Artificial Analysis Intelligence Index v4.1.1: GDPval-AA v2, τ³-Banking, Terminal-Bench v2.1, SciCode, Humanity's Last Exam, GPQA Diamond, CritPt, AA-Omniscience and AA-LCR.
 
-## Model Selection
+LiveBench questions and scores are maintained by LiveBench rather than copied into this repository. The application fetches the public leaderboard CSV at runtime and refreshes it every five minutes, with a manual refresh control. This keeps displayed benchmark results current without requiring a new application build.
 
-| Model | Source | Description |
-|-------|--------|-------------|
-| GPT-4o (Mock) | Local | Precise, direct answers with structured summaries |
-| Claude 3.5 Sonnet (Mock) | Local | Verbose, thorough multi-section explanations |
-| Gemini Pro (Mock) | Local | Structured numbered lists with conclusions |
-| Mistral 7B (Mock) | Local | Concise, punchy responses |
-| Llama 3 (Mock) | Local | Casual, conversational tone |
-| Mistral 7B Instruct | Hugging Face | Real Mistral model inference |
-| Llama 3.1 8B | Hugging Face | Real Meta Llama inference |
-| Gemma 2 9B | Hugging Face | Google's Gemma model |
-| Zephyr 7B | Hugging Face | HuggingFace's Zephyr model |
-| DeepSeek R1 | Hugging Face | DeepSeek distilled reasoning |
-| GPT-4o | GitHub Models | Real OpenAI GPT-4o via Azure |
-| GPT-4o Mini | GitHub Models | Efficient GPT-4o variant |
-| Phi-3 | GitHub Models | Microsoft's Phi-3 model |
-| Mistral Large | GitHub Models | Full Mistral Large model |
-| Llama 3.3 70B | GitHub Models | Full Llama 3.3 70B model |
-| AI21 Jamba | GitHub Models | AI21's Jamba model |
+LiveBench source: https://livebench.ai/
 
-## Extending
+Artificial Analysis source: https://artificialanalysis.ai/models/
 
-To add new mock models:
-1. Add entry to `MOCK_MODELS` in `lib/models.ts`
-2. Define template in `RESPONSE_TEMPLATES` in `lib/mock-engine.ts`
+The benchmark leaderboard is reference data. AI Benchmark's actual model comparisons remain live calls against the selected provider or local mock engine, so a benchmark run measures the responses produced at the time you run it.
 
-To add new real API models:
-1. Add entry to `HF_MODELS` or `GITHUB_MODELS` in `lib/models.ts`
-2. Update the ID mapping functions `getHFModelId` or `getGitHubModelId`
-3. The CompareView will automatically route to the correct streaming implementation
+## Model modes
+
+### Mock mode
+
+Models marked as mock use the local simulation engine and do not make network calls. This is the easiest mode for testing the UI or deploying a public demo without asking visitors for credentials.
+
+### Real provider mode
+
+The application can call supported real models through Hugging Face and GitHub Models when the user supplies a token during the session. Tokens are not committed to the repository.
+
+Use provider-specific tokens with the minimum permissions required for inference. Do not place personal access tokens directly in source files or commit them to Git.
+
+## Manual GitHub Pages deployment
+
+The repository uses GitHub Actions only for deployment and the workflow is intentionally manual. It runs only when you trigger it from the GitHub Actions tab with `workflow_dispatch`.
+
+1. Open the repository on GitHub.
+2. Go to **Settings → Pages**.
+3. Under **Build and deployment**, select **GitHub Actions** as the source.
+4. Go to **Actions** and select **Deploy to GitHub Pages**.
+5. Click **Run workflow** and run it from `main`.
+6. Wait for the build and deployment jobs to finish.
+7. Open the published Pages URL shown by the deployment environment.
+
+The Next.js configuration uses static export mode and the repository path `/AI-Benchmark` as its Pages base path. The workflow publishes the generated `out` directory.
+
+### Local Pages build check
+
+Before triggering deployment, verify the static export locally:
+
+```bash
+npm ci
+npm run build
+npx serve out
+```
+
+Then open the local server and verify navigation, benchmark selection, live leaderboard loading, mock-model comparisons and scoring.
+
+## Extending the project
+
+### Add a benchmark prompt
+
+Add a new entry to `BENCHMARK_PROMPTS` in `lib/benchmarks.ts`. Keep prompts focused on one capability so comparisons are easier to interpret.
+
+### Track a benchmark release
+
+Add a `BenchmarkDefinition` to `LATEST_BENCHMARKS` in `lib/benchmarks.ts` when a new public benchmark release becomes relevant. Keep the release identifier and source explicit.
+
+### Add a mock model
+
+Add an entry to `MOCK_MODELS` in `lib/models.ts` and a corresponding template in `lib/mock-engine.ts`.
+
+### Add a real model
+
+Add the model configuration to the relevant provider list in `lib/models.ts` and update the provider ID mapping. The comparison view routes the selected model to the appropriate response implementation.
+
+## Suggested next step
+
+The strongest next iteration is to turn benchmark definitions into versioned suites with per-task scoring, saved runs and aggregated results. That would move AI Benchmark closer to a reproducible evaluation tool rather than a one-off comparison interface.

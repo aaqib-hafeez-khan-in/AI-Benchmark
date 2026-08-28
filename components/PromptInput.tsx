@@ -10,6 +10,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { AVAILABLE_MODELS } from "@/lib/models"
+import { BENCHMARK_PROMPTS, LATEST_BENCHMARKS } from "@/lib/benchmarks"
+import { LiveBenchPanel } from "./LiveBenchPanel"
 
 interface PromptInputProps {
   prompt: string
@@ -28,8 +30,30 @@ export function PromptInput({
   onModelChange,
   onCompare,
 }: PromptInputProps) {
+  const handleBenchmarkChange = (id: string) => {
+    const benchmark = BENCHMARK_PROMPTS.find((item) => item.id === id)
+    if (benchmark) onPromptChange(benchmark.prompt)
+  }
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <Select onValueChange={handleBenchmarkChange} disabled={isStreaming}>
+          <SelectTrigger className="w-full sm:w-[320px]">
+            <SelectValue placeholder="Load a benchmark prompt" />
+          </SelectTrigger>
+          <SelectContent>
+            {BENCHMARK_PROMPTS.map((benchmark) => (
+              <SelectItem key={benchmark.id} value={benchmark.id}>
+                {benchmark.category} · {benchmark.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <span className="text-xs text-zinc-500 whitespace-nowrap">
+          {BENCHMARK_PROMPTS.length} runnable prompts · {LATEST_BENCHMARKS.length} benchmark suites
+        </span>
+      </div>
       <Textarea
         value={prompt}
         onChange={(e) => onPromptChange(e.target.value)}
@@ -43,11 +67,11 @@ export function PromptInput({
         }}
         className="resize-none"
       />
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <span className="text-xs text-zinc-500">
           {prompt.length} / 2000
         </span>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Select
             value={selectedModels[0]}
             onValueChange={(v) => onModelChange(0, v)}
@@ -88,6 +112,7 @@ export function PromptInput({
       <p className="text-xs text-zinc-600 text-right">
         Press ⌘ Enter to compare
       </p>
+      <LiveBenchPanel />
     </div>
   )
 }
