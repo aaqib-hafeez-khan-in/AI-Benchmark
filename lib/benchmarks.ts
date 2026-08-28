@@ -7,6 +7,15 @@ export interface BenchmarkPrompt {
   prompt: string
 }
 
+export interface BenchmarkDefinition {
+  id: string
+  name: string
+  source: string
+  release: string
+  categories: string[]
+  description: string
+}
+
 export const BENCHMARK_PROMPTS: BenchmarkPrompt[] = [
   {
     id: "coding-debugging",
@@ -37,6 +46,25 @@ export const BENCHMARK_PROMPTS: BenchmarkPrompt[] = [
     title: "Answer with uncertainty",
     category: "Factual QA",
     prompt: "Explain why a benchmark should distinguish between model knowledge, reasoning ability, and tool use. Clearly separate facts from assumptions and mention where an evaluator should avoid overclaiming.",
+  },
+]
+
+export const LATEST_BENCHMARKS: BenchmarkDefinition[] = [
+  {
+    id: "livebench-2026-06-25",
+    name: "LiveBench",
+    source: "LiveBench",
+    release: "2026-06-25",
+    categories: ["Reasoning", "Coding", "Agentic Coding", "Mathematics", "Data Analysis", "Language", "Instruction Following"],
+    description: "23 objective tasks across seven categories with regularly refreshed questions and automatic scoring.",
+  },
+  {
+    id: "aa-intelligence-v4-1-1",
+    name: "Artificial Analysis Intelligence Index",
+    source: "Artificial Analysis",
+    release: "v4.1.1",
+    categories: ["GDPval-AA v2", "τ³-Banking", "Terminal-Bench v2.1", "SciCode", "Humanity's Last Exam", "GPQA Diamond", "CritPt", "AA-Omniscience", "AA-LCR"],
+    description: "Composite intelligence evaluation covering agentic work, tool use, coding, science, reasoning, knowledge reliability and long-context reasoning.",
   },
 ]
 

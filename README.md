@@ -4,8 +4,9 @@ AI Benchmark is a Next.js application for comparing LLM responses side by side. 
 
 ## What you can do
 
-- Compare two models against the same prompt.
-- Load built-in benchmark prompts for coding, reasoning, summarization, instruction following and factual QA.
+- Compare two models against the same prompt in real time.
+- Load runnable benchmark prompts for coding, reasoning, summarization, instruction following and factual QA.
+- View the latest LiveBench leaderboard directly from its public release data.
 - Use mock models without API keys.
 - Use supported real-model providers when you supply your own token.
 - Score responses manually and inspect the winner for the current comparison.
@@ -28,17 +29,18 @@ npx serve out
 
 ## Benchmarks
 
-Built-in benchmark prompts live in `lib/benchmarks.ts`. They are intentionally kept separate from the UI so new prompts can be added without changing the comparison components.
+The application separates runnable prompts from benchmark metadata. Runnable prompts are designed for repeatable side-by-side comparisons. The benchmark catalog currently tracks the latest public releases used as reference points:
 
-The current benchmark categories are:
+- LiveBench 2026-06-25: 23 objective tasks across Reasoning, Coding, Agentic Coding, Mathematics, Data Analysis, Language and Instruction Following.
+- Artificial Analysis Intelligence Index v4.1.1: GDPval-AA v2, τ³-Banking, Terminal-Bench v2.1, SciCode, Humanity's Last Exam, GPQA Diamond, CritPt, AA-Omniscience and AA-LCR.
 
-- Coding
-- Reasoning
-- Summarization
-- Instruction Following
-- Factual QA
+LiveBench questions and scores are maintained by LiveBench rather than copied into this repository. The application fetches the public leaderboard CSV at runtime and refreshes it every five minutes, with a manual refresh control. This keeps displayed benchmark results current without requiring a new application build.
 
-These are starting points for repeatable comparisons, not a claim that the application provides a complete scientific evaluation of model quality. Real benchmarking should also control model versions, generation parameters, provider changes and evaluation methodology.
+LiveBench source: https://livebench.ai/
+
+Artificial Analysis source: https://artificialanalysis.ai/models/
+
+The benchmark leaderboard is reference data. AI Benchmark's actual model comparisons remain live calls against the selected provider or local mock engine, so a benchmark run measures the responses produced at the time you run it.
 
 ## Model modes
 
@@ -76,13 +78,17 @@ npm run build
 npx serve out
 ```
 
-Then open the local server and verify navigation, benchmark selection, mock-model comparisons and scoring.
+Then open the local server and verify navigation, benchmark selection, live leaderboard loading, mock-model comparisons and scoring.
 
 ## Extending the project
 
-### Add a benchmark
+### Add a benchmark prompt
 
 Add a new entry to `BENCHMARK_PROMPTS` in `lib/benchmarks.ts`. Keep prompts focused on one capability so comparisons are easier to interpret.
+
+### Track a benchmark release
+
+Add a `BenchmarkDefinition` to `LATEST_BENCHMARKS` in `lib/benchmarks.ts` when a new public benchmark release becomes relevant. Keep the release identifier and source explicit.
 
 ### Add a mock model
 
@@ -94,4 +100,4 @@ Add the model configuration to the relevant provider list in `lib/models.ts` and
 
 ## Suggested next step
 
-The strongest next iteration is to turn these individual benchmark prompts into versioned benchmark suites with saved runs and aggregated scores. That would move AI Benchmark closer to a reproducible evaluation tool rather than a one-off comparison interface.
+The strongest next iteration is to turn benchmark definitions into versioned suites with per-task scoring, saved runs and aggregated results. That would move AI Benchmark closer to a reproducible evaluation tool rather than a one-off comparison interface.

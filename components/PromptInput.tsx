@@ -10,7 +10,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { AVAILABLE_MODELS } from "@/lib/models"
-import { BENCHMARK_PROMPTS } from "@/lib/benchmarks"
+import { BENCHMARK_PROMPTS, LATEST_BENCHMARKS } from "@/lib/benchmarks"
+import { LiveBenchPanel } from "./LiveBenchPanel"
 
 interface PromptInputProps {
   prompt: string
@@ -35,7 +36,7 @@ export function PromptInput({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <Select onValueChange={handleBenchmarkChange} disabled={isStreaming}>
           <SelectTrigger className="w-full sm:w-[320px]">
@@ -50,7 +51,7 @@ export function PromptInput({
           </SelectContent>
         </Select>
         <span className="text-xs text-zinc-500 whitespace-nowrap">
-          {BENCHMARK_PROMPTS.length} built-in benchmarks
+          {BENCHMARK_PROMPTS.length} runnable prompts · {LATEST_BENCHMARKS.length} benchmark suites
         </span>
       </div>
       <Textarea
@@ -111,6 +112,7 @@ export function PromptInput({
       <p className="text-xs text-zinc-600 text-right">
         Press ⌘ Enter to compare
       </p>
+      <LiveBenchPanel />
     </div>
   )
 }
