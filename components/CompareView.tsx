@@ -188,6 +188,53 @@ async function* streamGitHubModelResponse(
   }
 }
 
+function downloadFile(content: string, fileName: string, type: string) {
+  const blob = new Blob([content], { type })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement("a")
+  anchor.href = url
+  anchor.download = fileName
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
+
+function getExportData(state: CompareState, models: ModelConfig[]) {
+  const modelResults = models.map((model) => ({
+    model: model.label,
+    modelId: model.id,
+    response: state.responses[model.id] ?? "",
+    score: state.scores[model.id] ?? null,
+  }))
+  const averages = modelResults.map((result) => ({
+    model: result.model,
+    average: result.score
+      ? (result.score.accuracy + result.score.tone + result.score.speed) / 3
+      : 0,
+  }))
+  const maxAverage = Math.max(...averages.map((item) => item.average))
+  const winner = maxAverage > 0
+    ? averages.filter((item) => item.average === maxAverage).map((item) => item.model)
+    : []
+
+  return {
+    exportedAt: new Date().toISOString(),
+    prompt: state.prompt,
+    models: modelResults,
+    winner: winner.length === 1 ? winner[0] : winner.length > 1 ? "Draw" : null,
+  }
+}
+
+function toMarkdown(data: ReturnType<typeof getExportData>) {
+  const sections = data.models.map((model) => {
+    const score = model.score
+      ? `Accuracy: ${model.score.accuracy}, Tone: ${model.score.tone}, Speed: ${model.score.speed}`
+      : "Not scored"
+    return `## ${model.model}\n\n**Scores:** ${score}\n\n**Response:**\n\n${model.response || "No response"}`
+  })
+
+  return `# AI Benchmark Run\n\n**Exported:** ${data.exportedAt}\n\n**Winner:** ${data.winner ?? "Not scored"}\n\n## Prompt\n\n${data.prompt}\n\n${sections.join("\n\n")}`
+}
+
 export function CompareView() {
   const [state, dispatch] = useReducer(compareReducer, initialState)
   const abortControllersRef = useRef<Record<string, AbortController>>({})
@@ -273,6 +320,18 @@ export function CompareView() {
     AVAILABLE_MODELS.find((m) => m.id === id)
   ).filter(Boolean) as ModelConfig[]
 
+  const canExport = models.some((model) => Boolean(state.responses[model.id]))
+
+  const handleExport = useCallback((format: "json" | "markdown") => {
+    if (!canExport) return
+    const data = getExportData(state, models)
+    if (format === "json") {
+      downloadFile(JSON.stringify(data, null, 2), "ai-benchmark-run.json", "application/json")
+    } else {
+      downloadFile(toMarkdown(data), "ai-benchmark-run.md", "text/markdown")
+    }
+  }, [canExport, state, models])
+
   return (
     <div className="space-y-6">
       {(needsHfToken || needsGithubToken) && (
@@ -354,6 +413,17 @@ export function CompareView() {
           />
         ))}
       </div>
+
+      {canExport && (
+        <div className="flex flex-wrap gap-3">
+          <Button variant="outline" onClick={() => handleExport("json")}>
+            Export JSON
+          </Button>
+          <Button variant="outline" onClick={() => handleExport("markdown")}>
+            Export Markdown
+          </Button>
+        </div>
+      )}
 
       <WinnerBar models={models as [ModelConfig, ModelConfig]} scores={state.scores} />
     </div>
